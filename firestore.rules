@@ -1,0 +1,132 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+  	match /invitations/{invitationId} {
+    	//allow read: if request.auth.uid != null;
+    	allow read;
+      allow write;
+      allow create;
+    }
+    match /milestones/{milestoneId} {
+    	//allow read: if request.auth.uid != null;
+    	allow read;
+      allow write;
+      allow create;
+    }
+    match /products/{productId} {
+    	allow read;
+    }
+    match /patches/{patchId} {
+    	//allow read: if request.auth.uid != null;
+    	allow read;
+      allow write;
+      allow create;
+    }
+    match /counter/{counterId} {
+    	allow read;
+      allow write;
+      allow create;
+    }
+    match /orders/{orderId} {
+    	allow read;
+      allow write;
+      allow create;
+    }
+  	match /cards/{cardId} {
+    	//allow read: if request.auth.uid != null;
+    	allow read;
+      allow write: if request.auth.uid != null;
+      allow create: if request.auth.uid != null;
+      allow update: if (request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['connections', 'links', 'visits', 'allProfilesVisits', 'clickedNo', 'connectionsCount', 'uniqueConnectionsCount', 'allConnectionsCount', 'masterLinks']));
+      allow delete: if get(/databases/$(database)/documents/Cards/$(cardId)).data.invitationData.masterId == request.auth.uid ||
+                   request.auth.token.claims.superAdmin == true;
+      match /visits/{visitId} {
+        allow read;
+        allow write;
+        allow create;
+        allow update;
+      }
+      match /connections/{cardId} {
+        allow read;
+        allow write;
+        allow create;
+        allow update;
+      }
+      match /connectionTags/{tagId} {
+        allow read;
+        allow write;
+        allow create;
+        allow update;
+      }
+      match /connectionSettings/{settingsId} {
+        allow read;
+        allow write;
+        allow create;
+        allow update;
+      }
+      match /assignedTags/{tagsId} {
+        allow read;
+        allow write;
+        allow create;
+        allow update;
+      }
+    }
+    match /connectionForms/{formId} {
+        allow read;
+        allow write;
+        allow create;
+        allow update;
+      }
+    match /subscribers/{uid} {
+      allow read;
+      // allow read: if request.auth.uid == uid || request.auth.token.claims.superAdmin == true;
+			allow update: if request.auth.token.claims.superAdmin == true;
+      allow create: if request.auth.token.claims.superAdmin == true;
+      allow write: if request.auth.token.claims.superAdmin == true;
+      match /checkout_sessions/{id} {
+        allow read, write: if request.auth.uid == uid;
+      }
+      match /subscriptions/{id} {
+        // allow read: if request.auth.uid == uid || request.auth.token.claims.superAdmin == true;
+        allow read;
+        allow update: if request.auth.token.claims.superAdmin == true;
+        allow create: if request.auth.token.claims.superAdmin == true;
+        allow write: if request.auth.token.claims.superAdmin == true;
+      }
+      match /payments/{id} {
+        allow read: if request.auth.uid == uid;
+      }
+    }
+
+    match /packages/{id} {
+      allow read: if true;
+
+      match /prices/{id} {
+        allow read: if true;
+      }
+
+      match /tax_rates/{id} {
+        allow read: if true;
+      }
+    }
+    match /connections/{cardId} {
+    	allow read;
+      allow write;
+      allow create;
+      allow update;
+    }
+    match /users/{userId} {
+      allow create:  if request.auth.uid != null || request.auth.token.claims.superAdmin == true;
+      // allow write: if request.auth.uid != null && (request.auth.token.claims.superAdmin == true ||
+      // 							request.auth.uid == request.resource.data.settings.masterId ||
+      //               request.auth.uid == userId);
+      // allow read: if request.auth.token.claims.superAdmin == true;
+      allow write;
+      // allow create;
+      allow read;
+      allow delete: if request.auth.uid != null && (request.auth.uid == request.resource.data.settings.masterId ||
+                   request.auth.token.claims.superAdmin == true);
+    }
+  }
+}
